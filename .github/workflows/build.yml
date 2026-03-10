@@ -1,0 +1,61 @@
+name: Build Audio2SRT
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build
+        run: pyinstaller audio2srt.spec --clean --noconfirm
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Audio2SRT-Windows
+          path: dist/Audio2SRT/
+
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build
+        run: pyinstaller audio2srt_mac.spec --clean --noconfirm
+
+      - name: Create DMG
+        run: |
+          hdiutil create -volname Audio2SRT \
+            -srcfolder dist/Audio2SRT.app \
+            -ov -format UDZO \
+            dist/Audio2SRT-mac.dmg
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Audio2SRT-Mac
+          path: dist/Audio2SRT-mac.dmg

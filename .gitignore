@@ -1,0 +1,29 @@
+# Build outputs
+build/
+dist/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Models (downloaded at runtime)
+models/
+
+# Logs
+data/*.log
+data/error.log
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# PyInstaller
+*.spec.bak
