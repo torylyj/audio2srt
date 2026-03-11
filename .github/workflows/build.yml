@@ -2,60 +2,60 @@ name: Build Audio2SRT
 
 on:
   push:
-    tags:
-      - 'v*'
-  workflow_dispatch:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  release:
+    types: [published]
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: Audio2SRT-Windows
+          - os: macos-latest
+            artifact_name: Audio2SRT-macOS
+          - os: ubuntu-latest
+            artifact_name: Audio2SRT-Linux
+    
+    runs-on: ${{ matrix.os }}
+    
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-
+          python-version: '3.11'
+      
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller
-
-      - name: Build
-        run: pyinstaller audio2srt.spec --clean --noconfirm
-
+      
+      - name: Build on Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          python -m PyInstaller audio2srt.spec --clean --noconfirm
+        shell: cmd
+      
+      - name: Build on macOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          python -m PyInstaller main.py --name=Audio2SRT --windowed --onedir --clean --noconfirm --collect-all=customtkinter --collect-all=faster-whisper --hidden-import=faster_whisper --hidden-import=ctranslate2 --hidden-import=huggingface_hub --hidden-import=av
+      
+      - name: Build on Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          python -m PyInstaller main.py --name=Audio2SRT --console --onedir --clean --noconfirm --collect-all=customtkinter --collect-all=faster-whisper --hidden-import=faster_whisper --hidden-import=ctranslate2 --hidden-import=huggingface_hub --hidden-import=av
+      
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Audio2SRT-Windows
-          path: dist/Audio2SRT/
-
-  build-mac:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pyinstaller
-
-      - name: Build
-        run: pyinstaller audio2srt_mac.spec --clean --noconfirm
-
-      - name: Create DMG
-        run: |
-          hdiutil create -volname Audio2SRT \
-            -srcfolder dist/Audio2SRT.app \
-            -ov -format UDZO \
-            dist/Audio2SRT-mac.dmg
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Audio2SRT-Mac
-          path: dist/Audio2SRT-mac.dmg
+          name: ${{ matrix.artifact_name }}
+          path: dist/
+          retention-days: 5
