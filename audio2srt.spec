@@ -10,7 +10,7 @@ import platform
 from PyInstaller.utils.hooks import collect_all, collect_data_files
 
 # 获取项目根目录
-project_root = os.path.dirname(os.path.abspath(file))
+project_root = os.path.dirname(os.path.abspath(__file__))
 
 # ============ 动态收集依赖 ============
 
