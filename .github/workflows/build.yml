@@ -5,12 +5,11 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  release:
-    types: [published]
 
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
@@ -40,8 +39,7 @@ jobs:
       - name: Build on Windows
         if: matrix.os == 'windows-latest'
         run: |
-          python -m PyInstaller audio2srt.spec --clean --noconfirm
-        shell: cmd
+          python -m PyInstaller main.py --name=Audio2SRT --windowed --onedir --clean --noconfirm --collect-all=customtkinter --collect-all=faster-whisper --hidden-import=faster_whisper --hidden-import=ctranslate2 --hidden-import=huggingface_hub --hidden-import=av
       
       - name: Build on macOS
         if: matrix.os == 'macos-latest'
